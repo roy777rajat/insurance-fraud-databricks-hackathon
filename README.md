@@ -1,3 +1,15 @@
+<div align="left">
+
+![Databricks](https://img.shields.io/badge/Databricks-Lakehouse-EF3E42?logo=databricks&logoColor=white)
+![Delta Lake](https://img.shields.io/badge/Delta%20Lake-Table%20Formats-0A99E6?logo=d)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
+![PySpark](https://img.shields.io/badge/PySpark-Data%20Processing-FDEE21?logo=apachespark&logoColor=black)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-Modeling-F7931E?logo=scikitlearn&logoColor=white)
+![MLflow](https://img.shields.io/badge/MLflow-Model%20Deployment-0194E2?logo=mlflow&logoColor=white)
+![SQL](https://img.shields.io/badge/SQL-Dashboards-336791?logo=postgresql&logoColor=white)
+
+</div>
+
 # 🚗 Insurance Fraud Detection on Databricks
 
 End-to-end **Motor Insurance Fraud Detection** pipeline built on the **Databricks Lakehouse** using **Delta Lake**, **scikit-learn**, and a **Fraud Command Center Dashboard** for claim investigators.
@@ -6,19 +18,90 @@ The workflow detects suspicious claims, explains *why* they look risky, and prov
 
 ---
 
+
 ## 🎯 Problem Overview
 
-Manual fraud review is slow and expensive. Our solution:
+Insurance companies process thousands of motor accident claims every month.  
+Most of these claims are genuine — repairs, accidents, weather damage, etc.  
+But a small percentage are **fraudulent**, such as:
 
-- Ingests and cleans claim data
-- Enriches with **PIN / region quality signals**
-- Trains a **fraud risk scoring model**
-- Generates **human-readable investigation notes**
-- Presents risk insights via a **live interactive dashboard**
-- Allows **natural language Q&A** using a Databricks-served LLM
+| Example Fraud Scenario | What Happens |
+|---|---|
+| Repair shop inflates the repair cost | Claim amount is higher than damage |
+| Customer delays reporting the accident | More time to “prepare” a story |
+| Claimant uses a fake or mismatched address | Harder to verify authenticity |
+| Injury severity is exaggerated | Higher compensation requested |
+
+Even **1–2%** fraud can lead to **millions in financial losses** every year.
+
+### Why Manual Review Fails
+- Claims officers receive **too many claims** to review them all in depth.
+- There is no easy way to **prioritize** which claims look suspicious.
+- Rules vary by **region, vehicle type, and circumstances**, making it complex.
+
+As a result:
+- **High-risk claims may get approved**
+- **Low-risk claims may get delayed unnecessarily**
+- Time and money are wasted
 
 ---
 
+## ✅ What This Solution Does
+
+This project helps claim teams be **faster and more accurate** by:
+
+| Feature | Benefit |
+|---|---|
+| **Scores each claim for fraud likelihood** | High-risk claims move to the **front** of the review queue |
+| **Explains *why* a claim looks suspicious** | Investigators understand the **context**, not just a score |
+| **Shows patterns in states, repair values, and reporting delays** | Helps identify **fraud clusters** or repeat patterns |
+| **Allows natural language Q&A** | Analysts can ask: “Show me risky claims in Delhi last month” |
+
+---
+
+## 🧍 Example Scenario (Simple and Realistic)
+
+Suppose we see the following:
+
+| Claim ID | State | Claim Amount | Repair Estimate | Report Delay | PIN Match | Result |
+|---|---|---|---|---|---|---|
+| C239441 | Delhi | ₹38,500 | ₹36,200 | 14 days late | ❌ Mismatch | **Suspicious** |
+| C102887 | Maharashtra | ₹9,200 | ₹8,850 | Same day | ✅ Valid | Normal |
+| C552991 | West Bengal | ₹72,000 | ₹71,400 | 17 days late | ✅ Valid | **Suspicious** |
+
+Patterns we notice:
+
+- Claims reported **late** often show **inflated repair amounts**
+- PIN mismatch may indicate **incorrect identity or address**
+- Certain **states** show repetitive inflated claims
+
+The system automatically surfaces the **first and third claim** as **Review First** cases.
+
+---
+
+## 🎯 Outcome
+
+Instead of reviewing all claims equally:
+- **High-risk claims get investigated first**
+- **Low-risk claims are processed quickly**
+- Fraud is detected **earlier**, saving time and cost
+
+This creates a **smarter, fairer, and faster** claims workflow.
+
+
+## 🧰 Tech Stack Used
+
+| Layer | Tools / Technologies |
+|------|----------------------|
+| **Platform** | Databricks Community Edition (Free Tier) |
+| **Storage & Tables** | Delta Lake, DBFS, Databricks SQL |
+| **Data Processing** | PySpark, SQL, Notebooks |
+| **ML Model** | scikit-learn (Gradient Boosting / IsolationForest fallback) |
+| **Explainability** | Rule-Based Reason Signals (Custom) |
+| **Visualization** | Databricks SQL Dashboard |
+| **AI Assistant (Q&A)** | MLflow Deployments + `databricks-meta-llama-3-3-70b-instruct` |
+
+---
 ## 🧱 Data Pipeline (Bronze → Silver → Gold → ML → Dashboard)
 
 | Step | Notebook | Output |
