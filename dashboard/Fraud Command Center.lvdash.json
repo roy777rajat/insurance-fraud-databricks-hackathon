@@ -1,0 +1,1302 @@
+{
+  "datasets": [
+    {
+      "name": "f9f7fb50",
+      "displayName": "gold_scored_claims_full_table",
+      "queryLines": [
+        "SELECT * \r\n",
+        "FROM workspace.insurance_fraud.vw_claims_enriched_scored p;"
+      ]
+    },
+    {
+      "name": "58a59279",
+      "displayName": "High_Risk_Claim_Table",
+      "queryLines": [
+        "SELECT\r\n",
+        "  claim_id, report_dt, state, total_claim_amount, repair_estimate,\r\n",
+        "  policy_annual_mileage, pin_valid, fraud_score, decision_flag, explanation\r\n",
+        "FROM workspace.insurance_fraud.vw_claims_enriched_scored\r\n",
+        "WHERE fraud_score >= 0.90 OR decision_flag <> 'PASS' \r\n",
+        "ORDER BY fraud_score DESC, report_dt DESC\r\n"
+      ]
+    },
+    {
+      "name": "feb76338",
+      "displayName": "Flagged rate by day",
+      "queryLines": [
+        "SELECT T.* from \r\n",
+        "(\r\n",
+        "  SELECT\r\n",
+        "    DATE(report_dt) AS dt,\r\n",
+        "    ROUND(100.0 * SUM(CASE WHEN decision_flag <> 'PASS' THEN 1 ELSE 0 END) / NULLIF(COUNT(*),0), 2) AS flagged_rate_pct\r\n",
+        "  FROM workspace.insurance_fraud.vw_claims_enriched_scored\r\n",
+        "  GROUP BY DATE(report_dt)\r\n",
+        "  ORDER BY dt\r\n",
+        ")T\r\n",
+        "WHERE\r\n",
+        "  1=1\r\n",
+        "AND T.flagged_rate_pct >0\r\n",
+        "order by T.flagged_rate_pct desc\r\n"
+      ]
+    },
+    {
+      "name": "74ad85c3",
+      "displayName": "Top States by flagged rate",
+      "queryLines": [
+        "SELECT\r\n",
+        "  state,\r\n",
+        "  SUM(CASE WHEN decision_flag <> 'PASS' THEN 1 ELSE 0 END) AS flagged_claims,\r\n",
+        "  COUNT(*) AS total_claims,\r\n",
+        "  ROUND(100.0 * SUM(CASE WHEN decision_flag <> 'PASS' THEN 1 ELSE 0 END) / NULLIF(COUNT(*),0), 2) AS flagged_rate_pct\r\n",
+        "FROM workspace.insurance_fraud.vw_claims_enriched_scored\r\n",
+        "GROUP BY state\r\n",
+        "HAVING total_claims >= 10\r\n",
+        "ORDER BY flagged_rate_pct DESC\r\n",
+        "LIMIT 5\r\n"
+      ]
+    },
+    {
+      "name": "c9ab23cc",
+      "displayName": "Core KPI",
+      "queryLines": [
+        "SELECT\r\n",
+        "  COUNT(*)                                                   AS total_claims,\r\n",
+        "  SUM(CASE WHEN decision_flag <> 'PASS' THEN 1 ELSE 0 END)  AS flagged_claims,\r\n",
+        "  ROUND(100.0 * SUM(CASE WHEN decision_flag <> 'PASS' THEN 1 ELSE 0 END) / NULLIF(COUNT(*),0), 2) AS flagged_rate_pct,\r\n",
+        "  ROUND(AVG(fraud_score), 4)                                 AS avg_fraud_score,\r\n",
+        "  report_dt, state, decision_flag\r\n",
+        "FROM workspace.insurance_fraud.vw_claims_enriched_scored\r\n",
+        "GROUP BY report_dt, state, decision_flag\r\n"
+      ]
+    },
+    {
+      "name": "2136d5d7",
+      "displayName": "Explanation wise",
+      "queryLines": [
+        "SELECT p.explanation, p.decision_flag , count(*)\r\n",
+        "FROM workspace.insurance_fraud.vw_claims_enriched_scored p\r\n",
+        "WHERE p.explanation IS NOT NULL AND p.explanation != ''\r\n",
+        "and p.decision_flag != 'PASS'\r\n",
+        "group by p.explanation, p.decision_flag\r\n",
+        "order by 3 desc"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "1c52e168",
+      "displayName": "Summary",
+      "layout": [
+        {
+          "widget": {
+            "name": "f64a79a5",
+            "queries": [
+              {
+                "name": "dashboards/01f0bbfb637818bcb96a669454409b4d/datasets/01f0bbfe6499187494d679aa08482170_state",
+                "query": {
+                  "datasetName": "f9f7fb50",
+                  "fields": [
+                    {
+                      "name": "state",
+                      "expression": "`state`"
+                    },
+                    {
+                      "name": "state_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f0bbfb637818bcb96a669454409b4d/datasets/01f0bcbd35e51fc3a4e82097c8581190_state",
+                "query": {
+                  "datasetName": "58a59279",
+                  "fields": [
+                    {
+                      "name": "state",
+                      "expression": "`state`"
+                    },
+                    {
+                      "name": "state_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "state",
+                    "queryName": "dashboards/01f0bbfb637818bcb96a669454409b4d/datasets/01f0bbfe6499187494d679aa08482170_state"
+                  },
+                  {
+                    "fieldName": "state",
+                    "queryName": "dashboards/01f0bbfb637818bcb96a669454409b4d/datasets/01f0bcbd35e51fc3a4e82097c8581190_state"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "State"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 1,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "7d763c6b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f9f7fb50",
+                  "fields": [
+                    {
+                      "name": "state",
+                      "expression": "`state`"
+                    },
+                    {
+                      "name": "sum(total_claim_amount)",
+                      "expression": "SUM(`total_claim_amount`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`state` IN (`state`) OR TRUE"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "state",
+                  "axis": {
+                    "title": "State",
+                    "hideLabels": false
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "custom-order",
+                      "orderedValues": [
+                        null,
+                        "Delhi",
+                        "Gujarat",
+                        "Karnataka",
+                        "Maharashtra",
+                        "Rajasthan",
+                        "Tamil Nadu",
+                        "Telangana",
+                        "Uttar Pradesh",
+                        "West Bengal"
+                      ]
+                    }
+                  },
+                  "displayName": "State"
+                },
+                "y": {
+                  "primary": {
+                    "fields": [
+                      {
+                        "fieldName": "sum(total_claim_amount)"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    },
+                    "axis": {
+                      "hideTitle": true
+                    },
+                    "format": {
+                      "type": "number-plain",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      },
+                      "hideGroupSeparator": false
+                    }
+                  },
+                  "secondary": {
+                    "fields": [],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Total Claim Amount by State",
+                "showTitle": true,
+                "showDescription": true,
+                "description": "State wise total claim amount"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 2,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "02fa07ad",
+            "queries": [
+              {
+                "name": "dashboards/01f0bbfb637818bcb96a669454409b4d/datasets/01f0bbfe6499187494d679aa08482170_report_dt",
+                "query": {
+                  "datasetName": "f9f7fb50",
+                  "fields": [
+                    {
+                      "name": "report_dt",
+                      "expression": "`report_dt`"
+                    },
+                    {
+                      "name": "report_dt_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f0bbfb637818bcb96a669454409b4d/datasets/01f0bcc39cb11d4287e25941e4149bf8_dt",
+                "query": {
+                  "datasetName": "feb76338",
+                  "fields": [
+                    {
+                      "name": "dt",
+                      "expression": "`dt`"
+                    },
+                    {
+                      "name": "dt_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "report_dt",
+                    "queryName": "dashboards/01f0bbfb637818bcb96a669454409b4d/datasets/01f0bbfe6499187494d679aa08482170_report_dt"
+                  },
+                  {
+                    "fieldName": "dt",
+                    "queryName": "dashboards/01f0bbfb637818bcb96a669454409b4d/datasets/01f0bcc39cb11d4287e25941e4149bf8_dt"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Report Date"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "3c0fe742",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "58a59279",
+                  "fields": [
+                    {
+                      "name": "claim_id",
+                      "expression": "`claim_id`"
+                    },
+                    {
+                      "name": "report_dt",
+                      "expression": "`report_dt`"
+                    },
+                    {
+                      "name": "state",
+                      "expression": "`state`"
+                    },
+                    {
+                      "name": "total_claim_amount",
+                      "expression": "`total_claim_amount`"
+                    },
+                    {
+                      "name": "repair_estimate",
+                      "expression": "`repair_estimate`"
+                    },
+                    {
+                      "name": "policy_annual_mileage",
+                      "expression": "`policy_annual_mileage`"
+                    },
+                    {
+                      "name": "pin_valid",
+                      "expression": "`pin_valid`"
+                    },
+                    {
+                      "name": "fraud_score",
+                      "expression": "`fraud_score`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "IN_RANGE(`report_dt`, NULL, NULL)"
+                    },
+                    {
+                      "expression": "`state` IN (`state`) OR TRUE"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "claim_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "ClaimID",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": {
+                          "themeColorType": "selectionColor"
+                        }
+                      },
+                      "rules": []
+                    }
+                  },
+                  {
+                    "fieldName": "report_dt",
+                    "dateTimeFormat": "DD/MM/YYYY",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "date",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "Claim Report Date",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": {
+                          "themeColorType": "selectionColor"
+                        }
+                      },
+                      "rules": []
+                    }
+                  },
+                  {
+                    "fieldName": "state",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "State",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  },
+                  {
+                    "fieldName": "total_claim_amount",
+                    "numberFormat": "0.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "Claim Amount",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": {
+                          "themeColorType": "selectionColor"
+                        }
+                      },
+                      "rules": []
+                    }
+                  },
+                  {
+                    "fieldName": "repair_estimate",
+                    "numberFormat": "0.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "Estimate Repair Cost",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": {
+                          "themeColorType": "selectionColor"
+                        }
+                      },
+                      "rules": []
+                    }
+                  },
+                  {
+                    "fieldName": "policy_annual_mileage",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100005,
+                    "title": "Mileage (Annually)",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  },
+                  {
+                    "fieldName": "pin_valid",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "boolean",
+                    "displayAs": "boolean",
+                    "visible": true,
+                    "order": 100006,
+                    "title": "pin_valid",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  },
+                  {
+                    "fieldName": "fraud_score",
+                    "numberFormat": "0.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100007,
+                    "title": "fraud_score",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  }
+                ]
+              },
+              "invisibleColumns": [
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "explanation",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 100000,
+                  "title": "explanation",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                },
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "decision_flag",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 100001,
+                  "title": "decision_flag",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                }
+              ],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": true,
+              "frame": {
+                "showTitle": true,
+                "title": "High Risk Claim",
+                "showDescription": true,
+                "description": "where Fraud Score >0.90  (Review & Watch)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "78458d86",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "feb76338",
+                  "fields": [
+                    {
+                      "name": "daily(dt)",
+                      "expression": "DATE_TRUNC(\"DAY\", `dt`)"
+                    },
+                    {
+                      "name": "avg(flagged_rate_pct)",
+                      "expression": "AVG(`flagged_rate_pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(dt)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "title": "Claim Report Date",
+                    "hideLabels": false,
+                    "hideGrid": true
+                  },
+                  "format": {
+                    "type": "date",
+                    "date": "locale-short-month"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(flagged_rate_pct)",
+                  "scale": {
+                    "type": "quantitative",
+                    "domain": {
+                      "min": 0
+                    }
+                  },
+                  "axis": {
+                    "title": "% of Risk"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Flagged Rate Over Time",
+                "showTitle": true,
+                "showDescription": true,
+                "description": "No of Claim lodged and No of Risk Flagged (100% means, if say 2 claim lodged and 2's are Flagged as REVIEW & WATCH for a date)"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "76e47481",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c9ab23cc",
+                  "fields": [
+                    {
+                      "name": "sum(total_claims)",
+                      "expression": "SUM(`total_claims`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_claims)"
+                }
+              },
+              "frame": {
+                "title": "Total Claims",
+                "showTitle": true,
+                "showDescription": true,
+                "description": "Total Claim Booked"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "21e52c69",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c9ab23cc",
+                  "fields": [
+                    {
+                      "name": "sum(flagged_claims)",
+                      "expression": "SUM(`flagged_claims`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(flagged_claims)"
+                }
+              },
+              "frame": {
+                "title": "Total Flagged Claims",
+                "showTitle": true,
+                "showDescription": true,
+                "description": "No Of Claim Risk (Review & Watch)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ce2fdb84",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c9ab23cc",
+                  "fields": [
+                    {
+                      "name": "avg(flagged_rate_pct)",
+                      "expression": "AVG(`flagged_rate_pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(flagged_rate_pct)"
+                }
+              },
+              "frame": {
+                "title": "Flagged Rate Percentage",
+                "showTitle": true,
+                "showDescription": true,
+                "description": "% Fradulant (Review & Watch)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "8e61634f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "74ad85c3",
+                  "fields": [
+                    {
+                      "name": "flagged_rate_pct",
+                      "expression": "`flagged_rate_pct`"
+                    },
+                    {
+                      "name": "state",
+                      "expression": "`state`"
+                    },
+                    {
+                      "name": "total_claims",
+                      "expression": "`total_claims`"
+                    },
+                    {
+                      "name": "flagged_claims",
+                      "expression": "`flagged_claims`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "flagged_rate_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  }
+                },
+                "color": {
+                  "fieldName": "state",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "natural-order"
+                    }
+                  },
+                  "legend": {
+                    "hide": false,
+                    "hideTitle": true,
+                    "position": "right"
+                  }
+                },
+                "label": {
+                  "show": true
+                },
+                "extra": [
+                  {
+                    "fieldName": "total_claims"
+                  },
+                  {
+                    "fieldName": "flagged_claims"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Top Contributer State ( Review & Watch)",
+                "showTitle": true,
+                "showDescription": true,
+                "description": "% Fradulant Flagged State(Top 5)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 1,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "6e4866e1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2136d5d7",
+                  "fields": [
+                    {
+                      "name": "explanation",
+                      "expression": "`explanation`"
+                    },
+                    {
+                      "name": "decision_flag",
+                      "expression": "`decision_flag`"
+                    },
+                    {
+                      "name": "count(1)",
+                      "expression": "`count(1)`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "explanation",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "explanation",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  },
+                  {
+                    "fieldName": "decision_flag",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "decision_flag",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  },
+                  {
+                    "fieldName": "count(1)",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "count(1)",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": true,
+              "frame": {
+                "title": "Explanation vs Decision Flag",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 8,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "c9e6ae59",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2136d5d7",
+                  "fields": [
+                    {
+                      "name": "sum(count(1))",
+                      "expression": "SUM(`count(1)`)"
+                    },
+                    {
+                      "name": "decision_flag",
+                      "expression": "`decision_flag`"
+                    },
+                    {
+                      "name": "explanation",
+                      "expression": "`explanation`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(count(1))",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "scientific",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "hideGroupSeparator": false
+                  }
+                },
+                "color": {
+                  "fieldName": "decision_flag",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "WATCH",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 1
+                        }
+                      },
+                      {
+                        "value": "REVIEW",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      }
+                    ]
+                  },
+                  "legend": {
+                    "hide": false,
+                    "hideTitle": true
+                  }
+                },
+                "label": {
+                  "show": true
+                },
+                "extra": [
+                  {
+                    "fieldName": "sum(count(1))"
+                  },
+                  {
+                    "fieldName": "explanation"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "% of decision Flagged distrubition",
+                "showTitle": true,
+                "showDescription": true,
+                "description": "Total Flagged Claim wise % of distribution"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 8,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "07677cd7",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### <span style=\"font-size: 24px;\">**Motor Claim Fraud Command Center**</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "902494a9",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "da524442",
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-picker",
+              "encodings": {
+                "fields": []
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Date range"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FAFAFB",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
+      "visualizationColors": [
+        "#077A9D",
+        "#FFAB00",
+        "#00A972",
+        "#FF3621",
+        "#8BCAE7",
+        "#AB4057",
+        "#99DDB4",
+        "#FCA4A1",
+        "#919191",
+        "#BF7080"
+      ],
+      "widgetHeaderAlignment": "LEFT"
+    },
+    "genieSpace": {
+      "isEnabled": true
+    },
+    "applyModeEnabled": false
+  }
+}
