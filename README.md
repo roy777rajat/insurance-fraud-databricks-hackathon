@@ -55,6 +55,12 @@ Our solution:
 ```
 ## 🧱 Pipeline Components
 
+<p align="center">
+  <img src="./dashboard/pipeline.jpg" width="920">
+</p>
+
+This interactive dashboard provides a consolidated view of **Motor Insurance Claim Fraud Risk** across the dataset.  
+It is backed by the `gold_scored_claims_explained` table, enriched with rule-based signals and ML-driven fraud probability scores.
 | Step | Notebook | Description |
 |---|---|---|
 | **Bronze Ingest** | `01_bronze_ingest.py` | Load CSVs or staging tables to Delta (`bronze_claims`) |
@@ -69,7 +75,36 @@ Our solution:
 
 ---
 
-## 🤖 Machine Learning Logic
+## 📊 Fraud Command Center Dashboard (Databricks SQL)
+<p align="center">
+  <img src="./dashboard/Full-View.jpg" width="920">
+</p>
+
+This interactive dashboard provides a consolidated view of **Motor Insurance Claim Fraud Risk** across the dataset.  
+It is backed by the `gold_scored_claims_explained` table, enriched with rule-based signals and ML-driven fraud probability scores.
+
+### Key Capabilities
+
+| Component | What it Shows | Why It Matters |
+|---------|---------------|----------------|
+| **Total Claims & Flagged Claims Overview** | Count of all processed claims and how many were flagged for review | Quickly assess the overall fraud pressure on the portfolio |
+| **Average Fraud Score** | Mean fraud score across filtered claims | Indicates the general risk trend of current data slice |
+| **State & Decision Filters** | Dashboard updates dynamically when selecting a State or Decision Flag | Enables targeted investigation and region-specific insights |
+| **Trends Over Time (Report Date Filter)** | Visualizes patterns of claim frequency and risk score over time | Detects abnormal spikes indicating possible coordinated activity |
+| **Fraud Score Distribution** | Histogram showing how many claims fall into PASS / WATCH / REVIEW | Helps gauge model sensitivity and threshold sanity |
+| **High-Risk Claims Table** | Sorted view showing top suspicious claims with explanations | Direct entry point for analyst deep-dive and investigative follow-up |
+
+### 🧠 How to Use It as an Analyst
+1. **Filter by State** to identify unusual hotspots (e.g., clusters in a region).
+2. **Drill into High-Risk Claims** table to view reason flags like:  
+   - *Claim reported late*  
+   - *High repair estimate*  
+   - *Address PIN mismatch*  
+   - *Severe injury claim reported*
+3. **Validate supporting documents**, perform follow-up checks, or recommend manual review.
+
+### 🎯 Outcome
+This dashboard enables **data-driven fraud prioritization**, ensuring analysts focus effort where it has the highest impact — improving fraud catch rate while reducing unnecessary manual reviews.
 
 ### 🧠 Primary Model: **Gradient Boosting Classifier**
 Used when we have **both** fraud (1) and non-fraud (0) labels.
@@ -98,26 +133,6 @@ We generate **human-readable reason statements**:
 
 These are combined into one `explanation` text field to support **investigator decision making**.
 
----
-
-## 📊 Fraud Command Center Dashboard (Databricks SQL)
-
-### **Global Filters**
-| Filter | Purpose |
-|---|---|
-| `report_dt` | Select time window of claims |
-| `state` | Focus on a geographic region |
-| `decision_flag` | Review only WATCH / REVIEW flagged claims |
-
-### **Dashboard Pages**
-| Section | Visualization | Insight |
-|---|---|---|
-| Summary | KPI Cards | Volume, flagged % and avg fraud score |
-| Trends | Line / Area charts | Risk over time |
-| Geography | Map (if enabled) or Bar by State | Regional fraud concentration |
-| Case Review Table | Interactive table | Drill into suspicious claims |
-
----
 
 ## 🤝 AI Assistant (Optional RAG-lite Notebook)
 
