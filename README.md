@@ -115,7 +115,10 @@ This creates a **smarter, fairer, and faster** claims workflow.
 | Final Dashboard View | `General_Output_view.sql` | `vw_claims_enriched_scored` |
 
 ---
+## 🧱 Architecture
+![Fraud Analytics Dashboard](./dashboard/Architecture.png)
 
+---
 ## 📊 Fraud Command Center Dashboard
 
 ![Fraud Analytics Dashboard](./dashboard/Full-View.jpg)
