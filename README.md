@@ -109,9 +109,10 @@ This creates a **smarter, fairer, and faster** claims workflow.
 | Raw Ingest | `01_bronze_ingest.py` | `bronze_claims` (Delta) |
 | Postal PIN Enrichment | `01_bronze_pin.py` | Valid / mismatch region signals |
 | Cleaning + Feature Creation | `02_silver_clean.py` & `02b_offline_enrichment_india.py` | `silver_enriched_claims` |
-| Feature Assembly | `03_gold_assemble_tmp.py` → `03c_promote_gold` | `gold_claim_features` |
-| Model Training + Scoring | `04_train_and_score.py` | `gold_scored_claims` |
-| Explainability Rules | `05_add_rule_explanations.py` | `gold_scored_claims_explained` |
+| Feature Assembly | `03_gold_assemble_tmp.py` | `gold_claim_features` |
+| Model Training + Scoring +Explanation | `04_train_and_score.py` | `gold_scored_claims` and `gold_scored_claims_explained` |
+| Model Evaluation | `04b_model_card.py` | `model_card_gbt` |
+| AI QnA | `05_ai_fraud_investigator_agent` | Call LLM : `databricks-meta-llama-3-3-70b-instruct` |
 | Final Dashboard View | `General_Output_view.sql` | `vw_claims_enriched_scored` |
 
 ---
