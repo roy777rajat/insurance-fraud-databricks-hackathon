@@ -1,4 +1,4 @@
-# 🚗 Insurance Fraud Detection on Databricks (Free Edition Hackathon)
+# 🚗 Insurance Fraud Detection on Databricks
 
 This project implements an **end-to-end Insurance Fraud Detection pipeline** on the **Databricks Lakehouse**, using **open-source ML**, **Delta Lake**, and a **Fraud Operations Dashboard** designed for claim adjusters.
 
@@ -20,10 +20,11 @@ Our solution:
 - Uses **data + ML + explainability**
 - Flags claims that should be **reviewed first**
 - Helps investigators **understand why** a claim looks suspicious
-
----
-
+  
 ## ✅ High-Level Architecture
+```markdown
+
+
 
             +-------------+
             | Raw Claim   |
@@ -37,23 +38,21 @@ Our solution:
        (02) Silver Layer - Data Cleaning & Standardization
                    |
                    v
- Offline Postal PIN Enrichment (IndiaGov API / cached)
+       (03) Offline Postal PIN Enrichment (IndiaGov API / cached)
                    |
                    v
-      (03) Gold Layer - Feature Engineered ML Table
+       (04) Gold Layer - Feature Engineered ML Table
                    |
                    v
-     (04) ML Model (Gradient Boosting + fallback IsolationForest)
+       (05) ML Model (Gradient Boosting + fallback IsolationForest)
                    |
                    v
-  (05) Human-friendly Explanations & Decision Flagging
+       (06) Human-friendly Explanations & Decision Flagging
                    |
                    v
-Databricks SQL Fraud Command Center Dashboard (Global Filters)
+       (07) Databricks SQL Fraud Command Center Dashboard (Global Filters)
 
-
----
-
+```
 ## 🧱 Pipeline Components
 
 | Step | Notebook | Description |
