@@ -56,11 +56,11 @@ Our solution:
 ## 🧱 Pipeline Components
 
 <p align="center">
-  <img src="./dashboard/pipeline.jpg" width="920">
+  <img src="./dashboard/pipeline.JPG" width="920">
 </p>
 
-This interactive dashboard provides a consolidated view of **Motor Insurance Claim Fraud Risk** across the dataset.  
-It is backed by the `gold_scored_claims_explained` table, enriched with rule-based signals and ML-driven fraud probability scores.
+
+
 | Step | Notebook | Description |
 |---|---|---|
 | **Bronze Ingest** | `01_bronze_ingest.py` | Load CSVs or staging tables to Delta (`bronze_claims`) |
